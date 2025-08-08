@@ -1,0 +1,109 @@
+{
+  "format_version": "1.0",
+  "provider_schemas": {
+    "registry.terraform.io/hashicorp/aws": {
+      "provider": {
+        "version": 0,
+        "block": { "attributes": {} }
+      },
+      "resource_schemas": {
+        "aws_instance": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id": { "type": "string", "computed": true },
+              "arn": { "type": "string", "computed": true },
+              "ami": { "type": "string", "required": true },
+              "instance_type": { "type": "string", "required": true },
+              "availability_zone": { "type": "string", "computed": true },
+              "public_ip": { "type": "string", "computed": true },
+              "private_ip": { "type": "string", "computed": true },
+              "tags": { "type": ["map", "string"], "optional": true }
+            },
+            "block_types": {
+              "root_block_device": {
+                "nesting_mode": "single",
+                "block": {
+                  "attributes": {
+                    "volume_type": { "type": "string", "optional": true },
+                    "volume_size": { "type": "number", "optional": true },
+                    "encrypted": { "type": "bool", "optional": true }
+                  }
+                }
+              },
+              "ebs_block_device": {
+                "nesting_mode": "set",
+                "block": {
+                  "attributes": {
+                    "device_name": { "type": "string", "required": true },
+                    "volume_size": { "type": "number", "optional": true },
+                    "volume_type": { "type": "string", "optional": true }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "aws_s3_bucket": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id": { "type": "string", "computed": true },
+              "arn": { "type": "string", "computed": true },
+              "bucket": { "type": "string", "required": true },
+              "bucket_domain_name": { "type": "string", "computed": true },
+              "region": { "type": "string", "computed": true }
+            }
+          }
+        }
+      },
+      "data_source_schemas": {
+        "aws_caller_identity": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "account_id": { "type": "string", "computed": true },
+              "arn": { "type": "string", "computed": true },
+              "user_id": { "type": "string", "computed": true }
+            }
+          }
+        },
+        "aws_ami": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id": { "type": "string", "computed": true },
+              "name": { "type": "string", "computed": true },
+              "description": { "type": "string", "computed": true },
+              "owners": { "type": ["list", "string"], "required": true },
+              "most_recent": { "type": "bool", "optional": true }
+            }
+          }
+        }
+      },
+      "ephemeral_resource_schemas": {
+        "aws_secretsmanager_secret_version": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "secret_id": { "type": "string", "required": true },
+              "secret_string": { "type": "string", "computed": true, "sensitive": true }
+            }
+          }
+        }
+      },
+      "functions": {
+        "aws_partition": {
+          "parameters": [],
+          "return_type": "string",
+          "description": "Returns the partition for the current region"
+        },
+        "aws_region": {
+          "parameters": [],
+          "return_type": "string", 
+          "description": "Returns the current AWS region"
+        }
+      }
+    }
+  }
+}

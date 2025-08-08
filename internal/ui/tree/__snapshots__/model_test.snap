@@ -1,0 +1,26 @@
+
+[TestModel_View/simple_case_with_selection_indicators - 1]
+└──> [ ] a
+   └──  [ ] a-a
+---
+
+[TestModel_View/sibling_branches_with_selection - 1]
+├──> [x] a
+│  ├──  [ ] a-a
+│  └──  [ ] a-b
+└──  [ ] b
+   └──  [x] b-a
+---
+
+[TestModel_View/scrolling_test_with_height_limit - 1]
+├──> [ ] root1
+├──  [ ] root2
+├──  [ ] root3
+├──  [ ] root4
+├──  [ ] root5
+---
+
+[TestModel_View/hidden_nodes - 1]
+└──> [ ] a
+   └──  [ ] a-a
+---

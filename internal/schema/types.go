@@ -1,6 +1,10 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+
+	tfjson "github.com/hashicorp/terraform-json"
+)
 
 type ProviderTarget struct {
 	Name    string `json:"name"`
@@ -22,51 +26,17 @@ type RequiredProvider struct {
 	Source  string `json:"source"`
 }
 
-type ProviderSchema struct {
-	FormatVersion    string              `json:"format_version"`
-	ProviderSchemas  map[string]Provider `json:"provider_schemas,omitempty"`
-	ProviderVersions map[string]string   `json:"provider_versions,omitempty"`
-}
+// Use official terraform-json ProviderSchemas type
+type ProviderSchemas = tfjson.ProviderSchemas
+type ProviderSchema = tfjson.ProviderSchema
+type Schema = tfjson.Schema
+type FunctionSignature = tfjson.FunctionSignature
 
-type Provider struct {
-	Provider          Block                     `json:"provider"`
-	ResourceSchemas   map[string]ResourceSchema `json:"resource_schemas,omitempty"`
-	DataSourceSchemas map[string]ResourceSchema `json:"data_source_schemas,omitempty"`
-}
+// Use official terraform-json VersionOutput type
+type VersionOutput = tfjson.VersionOutput
 
-type ResourceSchema struct {
-	Version int   `json:"version"`
-	Block   Block `json:"block"`
-}
-
-type Block struct {
-	Attributes  map[string]Attribute `json:"attributes,omitempty"`
-	BlockTypes  map[string]BlockType `json:"block_types,omitempty"`
-	Description string               `json:"description,omitempty"`
-}
-
-type Attribute struct {
-	Type        interface{} `json:"type"`
-	Description string      `json:"description,omitempty"`
-	Required    bool        `json:"required,omitempty"`
-	Optional    bool        `json:"optional,omitempty"`
-	Computed    bool        `json:"computed,omitempty"`
-	Sensitive   bool        `json:"sensitive,omitempty"`
-}
-
-type BlockType struct {
-	NestingMode string `json:"nesting_mode"`
-	Block       Block  `json:"block"`
-	MinItems    int    `json:"min_items,omitempty"`
-	MaxItems    int    `json:"max_items,omitempty"`
-}
-
-type VersionSchema struct {
-	ProviderSelections map[string]string `json:"provider_selections"`
-}
-
-func GetResourceSchema(providerSchema *ProviderSchema, providerName, resourceName string) (*ResourceSchema, error) {
-	provider, exists := providerSchema.ProviderSchemas[providerName]
+func GetResourceSchema(providerSchemas *ProviderSchemas, providerName, resourceName string) (*Schema, error) {
+	provider, exists := providerSchemas.Schemas[providerName]
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found in schema", providerName)
 	}
@@ -76,11 +46,11 @@ func GetResourceSchema(providerSchema *ProviderSchema, providerName, resourceNam
 		return nil, fmt.Errorf("resource %s not found in provider %s", resourceName, providerName)
 	}
 
-	return &resource, nil
+	return resource, nil
 }
 
-func GetDataSourceSchema(providerSchema *ProviderSchema, providerName, dataSourceName string) (*ResourceSchema, error) {
-	provider, exists := providerSchema.ProviderSchemas[providerName]
+func GetDataSourceSchema(providerSchemas *ProviderSchemas, providerName, dataSourceName string) (*Schema, error) {
+	provider, exists := providerSchemas.Schemas[providerName]
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found in schema", providerName)
 	}
@@ -90,5 +60,33 @@ func GetDataSourceSchema(providerSchema *ProviderSchema, providerName, dataSourc
 		return nil, fmt.Errorf("data source %s not found in provider %s", dataSourceName, providerName)
 	}
 
-	return &dataSource, nil
+	return dataSource, nil
+}
+
+func GetEphemeralResourceSchema(providerSchemas *ProviderSchemas, providerName, ephemeralResourceName string) (*Schema, error) {
+	provider, exists := providerSchemas.Schemas[providerName]
+	if !exists {
+		return nil, fmt.Errorf("provider %s not found in schema", providerName)
+	}
+
+	ephemeralResource, exists := provider.EphemeralResourceSchemas[ephemeralResourceName]
+	if !exists {
+		return nil, fmt.Errorf("ephemeral resource %s not found in provider %s", ephemeralResourceName, providerName)
+	}
+
+	return ephemeralResource, nil
+}
+
+func GetFunctionSchema(providerSchemas *ProviderSchemas, providerName, functionName string) (*FunctionSignature, error) {
+	provider, exists := providerSchemas.Schemas[providerName]
+	if !exists {
+		return nil, fmt.Errorf("provider %s not found in schema", providerName)
+	}
+
+	function, exists := provider.Functions[functionName]
+	if !exists {
+		return nil, fmt.Errorf("function %s not found in provider %s", functionName, providerName)
+	}
+
+	return function, nil
 }

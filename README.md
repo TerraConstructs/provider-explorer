@@ -1,74 +1,259 @@
-# Get Resource CLI
+# Provider Explorer
 
-## Overview
+**An interactive Terminal User Interface (TUI) for exploring Terraform provider schemas**
 
-Get Resource CLI is a Golang TUI to fetch terraform provider resource schema and transform.
+Provider Explorer is a Go-based CLI tool that helps developers navigate, understand, and work with complex Terraform provider resource schemas. It provides an intuitive interface with fuzzy search, interactive navigation, and built-in transformations to streamline Terraform development workflows.
 
-The CLI provides a TUI (https://github.com/charmbracelet/bubbletea) with fuzzy autocomplete to select a provider and resource in the active terraform project.
+![Go Version](https://img.shields.io/badge/go-1.24.4-blue.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)
 
-Once selected, the TUI displays every argument and attribute (including nested attributes) of the selection and offers several built-in transformers to work with the resource schema.
+## 🎯 Purpose & Use Cases
 
-## User interface and workflows
+**For Terraform Developers:**
+- 🔍 **Schema Discovery**: Quickly explore provider resources, data sources, and functions
+- 📚 **Documentation**: Understand resource arguments, attributes, and nested blocks
+- 🔄 **Code Generation**: Transform schemas into Terraform variable/output blocks
+- ⚡ **Rapid Development**: Find the right resources without context switching to documentation
 
-### Main command
+**For DevOps Engineers:**
+- 🏗️ **Infrastructure Planning**: Discover available resources before writing Terraform
+- 📝 **Template Creation**: Generate boilerplate Terraform code from schemas  
+- 🔧 **Troubleshooting**: Understand resource structures when debugging configurations
+- 📋 **Standards Creation**: Build consistent variable/output patterns across teams
 
-Arguments:
-- path (Default PWD): A path to the terraform configuration to work with.
+## 🚀 Features
 
-Example workflow from main:
+### Interactive Navigation
+- **Fuzzy Search**: Type to filter providers, resources, and attributes in real-time
+- **Multi-Level Browsing**: Navigate from providers → resource types → detailed schemas
+- **Responsive Layout**: Adapts to different terminal sizes and preferences
+- **Keyboard Navigation**: Efficient navigation with intuitive key bindings
 
-1. The cli is started with a path (pwd by default) and verifies if a Terraform configuration is available. (exit 1 if no terraform configuration found in path)
-2. The cli will detect which flavor (Terraform or opentofu - default to tofu) is available and ensure `init` is ran (os.exec) to download all the providers used in the configuration.
-4. behind the scenes, the cli loads the providers schema (either from a cache on disk ~ .resource-cache/ by default) or by invoking the terraform provider schema command (https://developer.hashicorp.com/terraform/cli/commands/providers/schema), writing the json output to cache and deserializing it into memory.
-3. The user is presented with a list of available providers in the configuration and can either navigate to a listed provider (or start typing and the provider list is filtered down (fuzzy match) to providers matching what the user typed). Press enter to select
-4. Once a provider is selected, the User is presented with a simple view with 4 sections: Data Sources, Ephemeral Resources, Provider Functions and Resources. For each section, the same User experience (either use navigation keys to select a provider or fuzzy match type to filter down the list), allows the user to select a resource within the provider (consider the TF)
-5. Once a resource is selected, the user is presented with 2 sections: Arguments and Attributes, navigating between them shows a list view next to it which the user can switch to and back to the section navigator.
-6. When in a specific resource section, the user can trigger a built-in "transformation"
-7. The first (and only) built-in transformation is "convert to HCL".
+### Schema Exploration
+- **Four Resource Categories**: Data Sources, Resources, Ephemeral Resources, Provider Functions
+- **Detailed Schema Views**: Browse arguments (inputs) and attributes (outputs) separately
+- **Nested Block Support**: Navigate complex nested resource structures
+- **Type Information**: See data types, requirements (required/optional), and descriptions
 
-Note on TUI representation of provider schemas:
+### Built-in Transformations
+- **Arguments → Variables**: Convert resource arguments to Terraform variable blocks
+- **Attributes → Outputs**: Generate output blocks from resource attributes
+- **HCL Generation**: Ready-to-use Terraform code with proper syntax and formatting
 
-The provider schemas are converted to string representations of the nested types which fit on screen. At the moment this is a very simple conversion to string which we may iterate on in the future.
+### Developer Experience
+- **Provider Caching**: Intelligent schema caching to avoid repeated API calls
+- **Auto-Detection**: Automatically detects Terraform vs OpenTofu installations
+- **Configuration Validation**: Ensures valid Terraform configurations before starting
+- **Fast Startup**: Quick initialization with cached provider schemas
 
-### Sub command: init
+## 🛠️ Tech Stack
 
-This command allows a user to init a directory (bail if not empty) by listing popular terraform providers (aws, gcp, azure to start with) and automatically generating a `providers.tf` file defining the Terraform configuration block (required providers, ... )
+### Core Technologies
+- **Language**: Go 1.24.4
+- **TUI Framework**: [Bubble Tea](https://github.com/charmbracelet/bubbletea) - Event-driven TUI framework
+- **Styling**: [Lipgloss](https://github.com/charmbracelet/lipgloss) - Terminal styling library
+- **CLI Framework**: [Cobra](https://github.com/spf13/cobra) - Command-line interface framework
 
-## Transformations
+### Key Dependencies
+- **Terraform Integration**:
+  - `github.com/hashicorp/terraform-json` - Schema parsing and data structures
+  - `github.com/hashicorp/terraform-config-inspect` - Configuration analysis
+  - `github.com/zclconf/go-cty` - Terraform type system support
 
-### Convert to HCL
+- **UI Components**:
+  - `github.com/charmbracelet/bubbles` - Pre-built UI components
+  - `github.com/sahilm/fuzzy` - Fuzzy string matching for search
+  - `github.com/atotto/clipboard` - Cross-platform clipboard support
 
-The convert to HCL transformation takes in a Resource Section (Attributes or Arguments).
+- **Testing & Quality**:
+  - `github.com/charmbracelet/x/exp/teatest` - TUI integration testing
+  - `github.com/gkampitakis/go-snaps` - Snapshot testing for UI consistency
+  - `github.com/stretchr/testify` - Testing utilities and assertions
 
-####  When passed in an Arguments Resource Section:
-
-The transformation will generate "terraform variable" HCL blocks for every element.
-
-Example output
-```hcl
-variable "foo" {
-    type = <attribute type>
-    description = <attribute description>
-}
+### Architecture
+```
+├── cmd/           # CLI command definitions and entry points
+├── internal/
+│   ├── config/    # Configuration detection and management
+│   ├── schema/    # Provider schema types and processing
+│   ├── terraform/ # Terraform/OpenTofu integration and caching
+│   └── ui/        # TUI components and application logic
+├── ui_test/       # Integration tests for UI workflows
+└── testdata/      # Test fixtures and schema samples
 ```
 
-If the attribute is a nested type, we will create an equivalent terraform Input variable "object". Refer to https://developer.hashicorp.com/terraform/language/values/variables#declaring-an-input-variable
+## 📦 Installation
 
-#### When passed in an Attributes Resource Section:
+### Prerequisites
+- Go 1.24.4 or later
+- Terraform or OpenTofu installed and accessible in PATH
+- A Terraform configuration directory to explore
 
+### Building from Source
+```bash
+# Clone the repository
+git clone https://github.com/terraconstructs/provider-explorer.git
+cd provider-explorer
 
-The transformation will generate "terraform output" HCL blocks for every element.
+# Build using GoReleaser (recommended)
+make build
 
-Example output
-```hcl
-# optional nested schema TUI representation
-output "foo" {
-    value = <attribute ref> # for example aws_instance.server.private_ip
-}
+# Or build with Go directly
+go build -o provider-explorer .
+
+# Install to $GOPATH/bin
+make install
 ```
 
-If the attribute is a nested type, we just create one output for the root attribute.
+### Using Pre-built Binaries
+```bash
+# Download from releases page (when available)
+# Extract and place in PATH
+```
 
-We also include the nested schema in the same way it is represented in the TUI as a comment section above the output for end user reference.
+## 🎮 Usage
 
-Refer to https://developer.hashicorp.com/terraform/language/values/outputs
+### Basic Usage
+```bash
+# Explore current directory's Terraform configuration
+./provider-explorer
+
+# Explore specific directory
+./provider-explorer ./path/to/terraform/config
+
+# Get help
+./provider-explorer --help
+```
+
+### Interactive Workflow
+1. **Start the Application**: Launch with a Terraform configuration directory
+2. **Provider Selection**: Browse or search available providers
+3. **Resource Category**: Choose from Data Sources, Resources, Ephemeral Resources, or Provider Functions  
+4. **Resource Selection**: Select specific resource types with fuzzy search
+5. **Schema Exploration**: Navigate between Arguments and Attributes views
+6. **Transformation**: Generate HCL code with built-in transformers
+7. **Copy to Clipboard**: Copy generated code for immediate use
+
+### Keyboard Shortcuts
+- **Navigation**: Arrow keys, Tab, Enter
+- **Search**: `/` to start filtering, Escape to clear
+- **Views**: `a` to toggle between Arguments/Attributes
+- **Actions**: Space to select/deselect items
+- **Exit**: `q` or Ctrl+C
+
+## 🔧 Development
+
+### Development Workflow
+
+**⚠️ CRITICAL**: This TUI application uses **test-driven development**. Manual execution is prohibited during development.
+
+#### Required Development Sequence:
+1. **Define Changes**: Specify what UI behavior changes are needed
+2. **Review Tests**: Identify affected teatest integration tests in `ui_test/`
+3. **Update Tests**: Modify test workflows to match new behavior
+4. **Review Snapshots**: Examine snapshot changes for visual regressions
+5. **Build**: Run `make build` to ensure compilation
+6. **Format**: Run `make fmt` for code formatting
+7. **Never Run Manually**: Do not execute `./provider-explorer` during development
+
+### Testing Strategy
+
+**Comprehensive Testing Coverage:**
+- **31 Integration Tests**: Full UI workflow coverage using teatest
+- **Snapshot Testing**: Visual regression detection for multiple screen sizes
+- **Component Tests**: Individual UI component validation
+- **Export Tests**: HCL transformation functionality validation
+
+#### Test Commands
+```bash
+# All tests (unit + integration)
+make test
+
+# Unit tests only (fast)
+make test-unit  
+
+# Integration tests only (teatest)
+make test-integration
+
+# Tests with coverage report
+make test-coverage
+
+# Quick development tests
+make test-short
+```
+
+#### Testing Patterns
+```go
+// ✅ CORRECT: Always wait for UI state
+teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
+    return bytes.Contains(b, []byte("expected content"))
+}, teatest.WithDuration(5*time.Second))
+
+// ❌ WRONG: Direct output reading
+output := tm.Output() // Unreliable for async UI
+```
+
+### Code Quality
+```bash
+# Format Go code
+make fmt
+
+# Clean build artifacts
+make clean
+
+# View all available commands
+make help
+```
+
+## 📁 Project Structure
+
+### Key Directories
+- **`cmd/`**: CLI command definitions and application entry points
+- **`internal/config/`**: Terraform configuration detection and validation
+- **`internal/terraform/`**: Provider schema loading, caching, and binary detection
+- **`internal/ui/`**: TUI application logic, components, and transformations
+- **`ui_test/`**: Comprehensive integration tests for all UI workflows
+- **`testdata/`**: Test fixtures and minimal provider schemas
+- **`fixtures/`**: Example Terraform configurations for testing
+
+### Testing Architecture
+- **Component Tests**: `internal/ui/tree/model_test.go` - Individual component snapshots
+- **Integration Tests**: `ui_test/*.go` - Full application workflow testing
+- **Snapshot Files**: `__snapshots__/` - Visual regression detection data
+- **Test Utilities**: `internal/ui/tree/testutil/` - Testing helper functions
+
+## 🤝 Contributing
+
+### Development Setup
+1. **Fork and Clone**: Fork the repository and clone your fork
+2. **Install Dependencies**: Run `go mod download`
+3. **Understand Testing**: Read the testing strategy in `CLAUDE.md`
+4. **Make Changes**: Follow the test-driven development workflow
+5. **Run Tests**: Ensure all tests pass before submitting
+
+### Pull Request Process
+1. **Create Feature Branch**: Branch from `main` with descriptive name
+2. **Update Tests**: Modify relevant teatest workflows for changes
+3. **Review Snapshots**: Ensure UI changes are intentional
+4. **Format Code**: Run `make fmt` before committing
+5. **Submit PR**: Include clear description of changes and test coverage
+
+### Code Standards
+- **Go Formatting**: Use `gofmt` and `goimports` for consistent formatting
+- **Testing Required**: All UI changes must include corresponding test updates
+- **Documentation**: Update README and CLAUDE.md for significant changes
+- **Commit Messages**: Use clear, descriptive commit messages
+
+## 📜 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Charm Bracelet**: For the excellent Bubble Tea TUI framework and ecosystem
+- **HashiCorp**: For Terraform and the provider schema APIs
+- **Go Community**: For the robust standard library and development tools
+
+---
+
+**Questions or Issues?** Please open an issue on GitHub or contribute to the project!

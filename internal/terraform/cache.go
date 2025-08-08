@@ -1,14 +1,72 @@
 package terraform
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
-	"github.com/terraconstructs/provider-explorer/internal/schema"
+	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
+
+// ProviderSpec represents a provider specification for cache key generation
+type ProviderSpec struct {
+	Source      string
+	Constraints string
+}
+
+// getLockfileHash reads the .terraform.lock.hcl file and returns its SHA256 hash
+func getLockfileHash(workingDir string) (string, error) {
+	lockfilePath := filepath.Join(workingDir, ".terraform.lock.hcl")
+
+	data, err := os.ReadFile(lockfilePath)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(data)
+	return fmt.Sprintf("%x", hash), nil
+}
+
+// getProviderSpecs extracts provider requirements from terraform configuration
+func getProviderSpecs(workingDir string) ([]ProviderSpec, error) {
+	module, diags := tfconfig.LoadModule(workingDir)
+	if diags.HasErrors() {
+		return nil, fmt.Errorf("failed to load terraform module: %v", diags)
+	}
+
+	var specs []ProviderSpec
+	for _, provider := range module.RequiredProviders {
+		spec := ProviderSpec{
+			Source:      provider.Source,
+			Constraints: strings.Join(provider.VersionConstraints, ","),
+		}
+		specs = append(specs, spec)
+	}
+
+	// Sort specs for consistent ordering
+	sort.Slice(specs, func(i, j int) bool {
+		return specs[i].Source < specs[j].Source
+	})
+
+	return specs, nil
+}
+
+// generateProviderSpecHash creates a hash from provider specifications
+func generateProviderSpecHash(specs []ProviderSpec) string {
+	var parts []string
+	for _, spec := range specs {
+		part := fmt.Sprintf("%s@%s", spec.Source, spec.Constraints)
+		parts = append(parts, part)
+	}
+
+	combined := strings.Join(parts, "|")
+	hash := sha256.Sum256([]byte(combined))
+	return fmt.Sprintf("%x", hash)
+}
 
 func getCacheDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
@@ -23,20 +81,43 @@ func getCacheFilePath(workingDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
-	// Use absolute path and hash it for cache file name
-	absPath, err := filepath.Abs(workingDir)
-	if err != nil {
-		return "", err
+
+	var cacheKey string
+
+	// Strategy 1: Try to use lockfile hash (most reliable)
+	if lockfileHash, err := getLockfileHash(workingDir); err == nil {
+		cacheKey = lockfileHash
+		// fmt.Fprintf(os.Stderr, "Using lockfile-based cache key\n")
+	} else {
+		// Strategy 2: Use provider specifications from terraform config
+		if specs, err := getProviderSpecs(workingDir); err == nil && len(specs) > 0 {
+			cacheKey = generateProviderSpecHash(specs)
+			fmt.Fprintf(os.Stderr, "Using provider-spec-based cache key\n")
+		}
 	}
-	
-	// Hash the path for filename
-	pathHash := fmt.Sprintf("%x", md5.Sum([]byte(absPath)))
-	filename := fmt.Sprintf("provider_schemas_%s.json", pathHash)
+
+	filename := fmt.Sprintf("provider_schemas_%s.json", cacheKey)
 	return filepath.Join(cacheDir, filename), nil
 }
 
-func ReadProviderSchemaFromCache(workingDir string) (*schema.ProviderSchema, error) {
+// HasValidProviderCache checks if a valid cache exists for the given working directory
+func HasValidProviderCache(workingDir string) bool {
+	cachePath, err := getCacheFilePath(workingDir)
+	if err != nil {
+		return false
+	}
+
+	// Check if cache file exists
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		return false
+	}
+
+	// Try to read and parse the cache to ensure it's valid
+	_, err = ReadProviderSchemaFromCache(workingDir)
+	return err == nil
+}
+
+func ReadProviderSchemaFromCache(workingDir string) (*SchemaWithVersionInfo, error) {
 	cachePath, err := getCacheFilePath(workingDir)
 	if err != nil {
 		return nil, err
@@ -51,15 +132,15 @@ func ReadProviderSchemaFromCache(workingDir string) (*schema.ProviderSchema, err
 		return nil, fmt.Errorf("failed to read cache file: %w", err)
 	}
 
-	var providerSchema schema.ProviderSchema
-	if err := json.Unmarshal(data, &providerSchema); err != nil {
+	var schemaWithVersion SchemaWithVersionInfo
+	if err := json.Unmarshal(data, &schemaWithVersion); err != nil {
 		return nil, fmt.Errorf("failed to parse cached schema: %w", err)
 	}
 
-	return &providerSchema, nil
+	return &schemaWithVersion, nil
 }
 
-func WriteProviderSchemaToCache(workingDir string, providerSchema *schema.ProviderSchema) error {
+func WriteProviderSchemaToCache(workingDir string, schemaWithVersion *SchemaWithVersionInfo) error {
 	cachePath, err := getCacheFilePath(workingDir)
 	if err != nil {
 		return err
@@ -70,7 +151,7 @@ func WriteProviderSchemaToCache(workingDir string, providerSchema *schema.Provid
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
-	data, err := json.MarshalIndent(providerSchema, "", "  ")
+	data, err := json.MarshalIndent(schemaWithVersion, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal schema: %w", err)
 	}

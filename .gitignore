@@ -19,3 +19,6 @@ provider-explorer
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+coverage.out
+coverage.html
