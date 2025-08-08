@@ -203,10 +203,38 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         m.types.SetToolInfo(msg.toolInfo, msg.version)
         m.status.SetToolInfo(msg.toolInfo, msg.version)
         
-        // Switch from loading to provider selection stage
-        m.stage = StageProviderSelect
-        // Focus the providers list
-        m.providers.Focus()
+        // Check if only one provider exists - auto-select it
+        if len(msg.schemas.Schemas) == 1 {
+            // Extract the single provider name and schema
+            var providerName string
+            var providerSchema *tfjson.ProviderSchema
+            for name, schema := range msg.schemas.Schemas {
+                providerName = name
+                providerSchema = schema
+                break
+            }
+            
+            // Update application state with selected provider
+            m.selectedProvider = providerName
+            m.status.SetProvider(providerName)
+            m.types.SetCounts(
+                len(providerSchema.DataSourceSchemas),
+                len(providerSchema.ResourceSchemas),
+                len(providerSchema.EphemeralResourceSchemas),
+                len(providerSchema.Functions),
+            )
+            
+            // Skip provider selection and go directly to type selection
+            m.stage = StageTypeSelect
+            m.focus = FocusTypes
+            m.providers.Blur()
+            m.types.Focus()
+        } else {
+            // Multiple providers - show provider selection stage
+            m.stage = StageProviderSelect
+            m.focus = FocusProviders
+            m.providers.Focus()
+        }
 
     case tea.KeyMsg:
         // Direct tree navigation keys when tree is focused
