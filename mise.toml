@@ -1,0 +1,5 @@
+[tools]
+goreleaser = "2.11.1"
+node = "22.16.0"
+opentofu = "1.8.2"
+terraform = "1.7.5"
