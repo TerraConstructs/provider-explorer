@@ -6,6 +6,9 @@ Provider Explorer is a Go-based CLI tool that helps developers navigate, underst
 
 ![Go Version](https://img.shields.io/badge/go-1.24.4-blue.svg)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)
+![GitHub Release](https://img.shields.io/github/v/release/TerraConstructs/provider-explorer?include_prereleases)
+
+![Demo](./demo/demo.gif)
 
 ## 🎯 Purpose & Use Cases
 
@@ -106,9 +109,59 @@ make install
 ```
 
 ### Using Pre-built Binaries
+
+Download the latest release for your platform from the [releases page](https://github.com/TerraConstructs/provider-explorer/releases/latest).
+
+#### macOS
 ```bash
-# Download from releases page (when available)
-# Extract and place in PATH
+# Apple Silicon (M1/M2/M3)
+curl -L -o provider-explorer.tar.gz https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Darwin_arm64.tar.gz
+tar -xzf provider-explorer.tar.gz
+sudo mv provider-explorer /usr/local/bin/
+
+# Intel-based Mac
+curl -L -o provider-explorer.tar.gz https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Darwin_x86_64.tar.gz
+tar -xzf provider-explorer.tar.gz
+sudo mv provider-explorer /usr/local/bin/
+```
+
+#### Linux
+```bash
+# ARM64 (aarch64)
+curl -L -o provider-explorer.tar.gz https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Linux_arm64.tar.gz
+tar -xzf provider-explorer.tar.gz
+sudo mv provider-explorer /usr/local/bin/
+
+# x86_64 (Intel/AMD)
+curl -L -o provider-explorer.tar.gz https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Linux_x86_64.tar.gz
+tar -xzf provider-explorer.tar.gz
+sudo mv provider-explorer /usr/local/bin/
+```
+
+#### Windows
+Download the appropriate `.zip` file for your architecture:
+- **ARM64**: [provider-explorer_Windows_arm64.zip](https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Windows_arm64.zip)
+- **x86_64**: [provider-explorer_Windows_x86_64.zip](https://github.com/TerraConstructs/provider-explorer/releases/latest/download/provider-explorer_Windows_x86_64.zip)
+
+Extract the `.zip` file and add the `provider-explorer.exe` to your PATH.
+
+#### Using GitHub CLI
+```bash
+# Download for your current platform automatically
+gh release download --repo TerraConstructs/provider-explorer --pattern '*$(uname -s)_$(uname -m)*'
+
+# Or download a specific version
+gh release download v1.0.0 --repo TerraConstructs/provider-explorer
+```
+
+#### Verify Installation
+```bash
+# Verify the binary works
+provider-explorer version
+
+# Verify checksum (optional)
+curl -L -o checksums.txt https://github.com/TerraConstructs/provider-explorer/releases/latest/download/checksums.txt
+shasum -a 256 --check checksums.txt --ignore-missing
 ```
 
 ## 🎮 Usage

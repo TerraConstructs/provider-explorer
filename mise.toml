@@ -1,5 +1,7 @@
 [tools]
+ffmpeg = "latest"
 goreleaser = "2.11.1"
 node = "22.16.0"
 opentofu = "1.9"
 terraform = "1.10"
+vhs = "latest"

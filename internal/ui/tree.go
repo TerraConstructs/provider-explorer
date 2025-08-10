@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -104,7 +105,8 @@ func (m *SchemaTreeModel) rebuildTree() {
 	switch m.mode {
 	case ArgumentsMode:
 		// Show required and optional attributes
-		for name, attr := range m.schema.Block.Attributes {
+		for _, name := range sortedAttrKeys(m.schema.Block.Attributes) {
+			attr := m.schema.Block.Attributes[name]
 			if !attr.Computed { // Arguments are non-computed
 				path := []string{name}
 				nodeID := m.generateNodeID()
@@ -117,14 +119,16 @@ func (m *SchemaTreeModel) rebuildTree() {
 		}
 
 		// Add nested blocks (these are also arguments)
-		for name, block := range m.schema.Block.NestedBlocks {
+		for _, name := range sortedBlockKeys(m.schema.Block.NestedBlocks) {
+			block := m.schema.Block.NestedBlocks[name]
 			path := []string{name}
 			m.addBlockNodes("", name, block.Block, path)
 		}
 
 	case AttributesMode:
 		// Show computed attributes
-		for name, attr := range m.schema.Block.Attributes {
+		for _, name := range sortedAttrKeys(m.schema.Block.Attributes) {
+			attr := m.schema.Block.Attributes[name]
 			if attr.Computed {
 				path := []string{name}
 				nodeID := m.generateNodeID()
@@ -137,7 +141,8 @@ func (m *SchemaTreeModel) rebuildTree() {
 		}
 
 		// Computed nested blocks are less common but possible
-		for name, block := range m.schema.Block.NestedBlocks {
+		for _, name := range sortedBlockKeys(m.schema.Block.NestedBlocks) {
+			block := m.schema.Block.NestedBlocks[name]
 			path := []string{name}
 			m.addBlockNodes("", name, block.Block, path)
 		}
@@ -153,8 +158,9 @@ func (m *SchemaTreeModel) addBlockNodes(parentID, name string, block *tfjson.Sch
 	m.treeModel.Add(parentID, nodeID, schemaNode)
 	m.nodeIsBlock[nodeID] = true
 
-	// Add attributes from the nested block
-	for attrName, attr := range block.Attributes {
+	// Add attributes from the nested block (sorted)
+	for _, attrName := range sortedAttrKeys(block.Attributes) {
+		attr := block.Attributes[attrName]
 		childPath := append(path, attrName)
 		childNodeID := m.generateNodeID()
 		childSchemaNode := tree.NewAttributeNode(childNodeID, attrName, attr, childPath)
@@ -164,11 +170,32 @@ func (m *SchemaTreeModel) addBlockNodes(parentID, name string, block *tfjson.Sch
 		m.nodeIsBlock[childNodeID] = false
 	}
 
-	// Add nested blocks recursively
-	for blockName, nestedBlock := range block.NestedBlocks {
+	// Add nested blocks recursively (sorted)
+	for _, blockName := range sortedBlockKeys(block.NestedBlocks) {
+		nestedBlock := block.NestedBlocks[blockName]
 		childPath := append(path, blockName)
 		m.addBlockNodes(nodeID, blockName, nestedBlock.Block, childPath)
 	}
+}
+
+// sortedAttrKeys returns attribute map keys sorted alphabetically
+func sortedAttrKeys(m map[string]*tfjson.SchemaAttribute) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// sortedBlockKeys returns nested block map keys sorted alphabetically
+func sortedBlockKeys(m map[string]*tfjson.SchemaBlockType) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // toggleNodeSelectionCascade toggles selection for a node and all its descendants.

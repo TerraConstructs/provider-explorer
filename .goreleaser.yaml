@@ -18,10 +18,10 @@ builds:
     binary: provider-explorer
     ldflags:
       - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
-      - -X main.builtBy=goreleaser
+      - -X github.com/terraconstructs/provider-explorer/cmd.version={{.Version}}
+      - -X github.com/terraconstructs/provider-explorer/cmd.commit={{.Commit}}
+      - -X github.com/terraconstructs/provider-explorer/cmd.date={{.Date}}
+      - -X github.com/terraconstructs/provider-explorer/cmd.builtBy=goreleaser
 
 archives:
   - format_overrides:
