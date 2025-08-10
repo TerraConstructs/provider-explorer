@@ -1,11 +1,11 @@
 package ui
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 
-    "github.com/terraconstructs/provider-explorer/internal/schema"
-    tfjson "github.com/hashicorp/terraform-json"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/terraconstructs/provider-explorer/internal/schema"
 )
 
 // ResourceSection represents which section of a resource (Arguments or Attributes)
@@ -121,155 +121,155 @@ func ConvertAttributesToHCLOutputs(resourceName string, resourceSchema *schema.S
 // ConvertSelectedArgumentsToHCLVariables converts only selected argument attributes into variables.
 // It respects hierarchy: a nested attribute is included only if all parent blocks are selected.
 func ConvertSelectedArgumentsToHCLVariables(resourceSchema *schema.Schema, selectedPaths [][]string) string {
-    if resourceSchema == nil || resourceSchema.Block == nil {
-        return "# No arguments available for variable conversion\n"
-    }
+	if resourceSchema == nil || resourceSchema.Block == nil {
+		return "# No arguments available for variable conversion\n"
+	}
 
-    // Build a set of selected path keys for ancestor checks
-    selSet := make(map[string]struct{})
-    for _, p := range selectedPaths {
-        selSet[strings.Join(p, ".")] = struct{}{}
-    }
+	// Build a set of selected path keys for ancestor checks
+	selSet := make(map[string]struct{})
+	for _, p := range selectedPaths {
+		selSet[strings.Join(p, ".")] = struct{}{}
+	}
 
-    var b strings.Builder
-    b.WriteString("# Terraform Variables Generated from Selected Arguments\n\n")
+	var b strings.Builder
+	b.WriteString("# Terraform Variables Generated from Selected Arguments\n\n")
 
-    included := 0
-    for _, path := range selectedPaths {
-        // Ensure all ancestors are selected
-        okAnc := true
-        for i := 1; i < len(path); i++ {
-            if _, ok := selSet[strings.Join(path[:i], ".")]; !ok {
-                okAnc = false
-                break
-            }
-        }
-        if !okAnc {
-            continue
-        }
+	included := 0
+	for _, path := range selectedPaths {
+		// Ensure all ancestors are selected
+		okAnc := true
+		for i := 1; i < len(path); i++ {
+			if _, ok := selSet[strings.Join(path[:i], ".")]; !ok {
+				okAnc = false
+				break
+			}
+		}
+		if !okAnc {
+			continue
+		}
 
-        // Resolve path to attribute
-        if attr, found := resolveAttributeByPath(resourceSchema.Block, path); found {
-            // Only include arguments (required/optional, not computed)
-            if attr.Required || attr.Optional {
-                varName := strings.Join(path, "_")
-                b.WriteString(fmt.Sprintf("variable \"%s\" {\n", varName))
-                b.WriteString(fmt.Sprintf("  type = %s\n", convertTypeToHCLType(attr.AttributeType)))
-                description := attr.Description
-                if description == "" {
-                    if attr.Required {
-                        description = fmt.Sprintf("Required argument for %s", varName)
-                    } else {
-                        description = fmt.Sprintf("Optional argument for %s", varName)
-                    }
-                }
-                b.WriteString(fmt.Sprintf("  description = \"%s\"\n", escapeDescription(description)))
-                if !attr.Required {
-                    b.WriteString("  default = null\n")
-                }
-                b.WriteString("}\n\n")
-                included++
-            }
-        }
-    }
+		// Resolve path to attribute
+		if attr, found := resolveAttributeByPath(resourceSchema.Block, path); found {
+			// Only include arguments (required/optional, not computed)
+			if attr.Required || attr.Optional {
+				varName := strings.Join(path, "_")
+				b.WriteString(fmt.Sprintf("variable \"%s\" {\n", varName))
+				b.WriteString(fmt.Sprintf("  type = %s\n", convertTypeToHCLType(attr.AttributeType)))
+				description := attr.Description
+				if description == "" {
+					if attr.Required {
+						description = fmt.Sprintf("Required argument for %s", varName)
+					} else {
+						description = fmt.Sprintf("Optional argument for %s", varName)
+					}
+				}
+				b.WriteString(fmt.Sprintf("  description = \"%s\"\n", escapeDescription(description)))
+				if !attr.Required {
+					b.WriteString("  default = null\n")
+				}
+				b.WriteString("}\n\n")
+				included++
+			}
+		}
+	}
 
-    if included == 0 {
-        b.WriteString("# No selected arguments available for variable conversion\n")
-    }
+	if included == 0 {
+		b.WriteString("# No selected arguments available for variable conversion\n")
+	}
 
-    return b.String()
+	return b.String()
 }
 
 // ConvertSelectedAttributesToHCLOutputs converts only selected computed attributes into outputs.
 // The resource instance name is provided explicitly and the reference path is composed from the selection path.
 func ConvertSelectedAttributesToHCLOutputs(resourceName string, resourceSchema *schema.Schema, providerName string, instanceName string, selectedPaths [][]string) string {
-    if resourceSchema == nil || resourceSchema.Block == nil {
-        return "# No computed attributes available for output conversion\n"
-    }
+	if resourceSchema == nil || resourceSchema.Block == nil {
+		return "# No computed attributes available for output conversion\n"
+	}
 
-    // Build a set of selected path keys for ancestor checks
-    selSet := make(map[string]struct{})
-    for _, p := range selectedPaths {
-        selSet[strings.Join(p, ".")] = struct{}{}
-    }
+	// Build a set of selected path keys for ancestor checks
+	selSet := make(map[string]struct{})
+	for _, p := range selectedPaths {
+		selSet[strings.Join(p, ".")] = struct{}{}
+	}
 
-    var b strings.Builder
-    b.WriteString("# Terraform Outputs Generated from Selected Attributes\n\n")
+	var b strings.Builder
+	b.WriteString("# Terraform Outputs Generated from Selected Attributes\n\n")
 
-    included := 0
-    for _, path := range selectedPaths {
-        // Ensure all ancestors are selected
-        okAnc := true
-        for i := 1; i < len(path); i++ {
-            if _, ok := selSet[strings.Join(path[:i], ".")]; !ok {
-                okAnc = false
-                break
-            }
-        }
-        if !okAnc {
-            continue
-        }
+	included := 0
+	for _, path := range selectedPaths {
+		// Ensure all ancestors are selected
+		okAnc := true
+		for i := 1; i < len(path); i++ {
+			if _, ok := selSet[strings.Join(path[:i], ".")]; !ok {
+				okAnc = false
+				break
+			}
+		}
+		if !okAnc {
+			continue
+		}
 
-        if attr, found := resolveAttributeByPath(resourceSchema.Block, path); found {
-            if attr.Computed {
-                // Name outputs by joining path with underscores for uniqueness
-                outName := strings.Join(path, "_")
+		if attr, found := resolveAttributeByPath(resourceSchema.Block, path); found {
+			if attr.Computed {
+				// Name outputs by joining path with underscores for uniqueness
+				outName := strings.Join(path, "_")
 
-                // Add nested schema as comment if complex type
-                if isComplexType(attr.AttributeType) {
-                    b.WriteString(fmt.Sprintf("# %s structure:\n", outName))
-                    b.WriteString(fmt.Sprintf("# %s\n", renderAttributeTypeComment(attr.AttributeType)))
-                }
+				// Add nested schema as comment if complex type
+				if isComplexType(attr.AttributeType) {
+					b.WriteString(fmt.Sprintf("# %s structure:\n", outName))
+					b.WriteString(fmt.Sprintf("# %s\n", renderAttributeTypeComment(attr.AttributeType)))
+				}
 
-                // Reference uses dot-joined attribute path
-                refPath := strings.Join(path, ".")
-                resourceRef := fmt.Sprintf("%s.%s.%s", resourceName, instanceName, refPath)
+				// Reference uses dot-joined attribute path
+				refPath := strings.Join(path, ".")
+				resourceRef := fmt.Sprintf("%s.%s.%s", resourceName, instanceName, refPath)
 
-                b.WriteString(fmt.Sprintf("output \"%s\" {\n", outName))
-                b.WriteString(fmt.Sprintf("  value = %s\n", resourceRef))
-                if attr.Description != "" {
-                    b.WriteString(fmt.Sprintf("  description = \"%s\"\n", escapeDescription(attr.Description)))
-                }
-                if attr.Sensitive {
-                    b.WriteString("  sensitive = true\n")
-                }
-                b.WriteString("}\n\n")
-                included++
-            }
-        }
-    }
+				b.WriteString(fmt.Sprintf("output \"%s\" {\n", outName))
+				b.WriteString(fmt.Sprintf("  value = %s\n", resourceRef))
+				if attr.Description != "" {
+					b.WriteString(fmt.Sprintf("  description = \"%s\"\n", escapeDescription(attr.Description)))
+				}
+				if attr.Sensitive {
+					b.WriteString("  sensitive = true\n")
+				}
+				b.WriteString("}\n\n")
+				included++
+			}
+		}
+	}
 
-    if included == 0 {
-        b.WriteString("# No selected computed attributes available for output conversion\n")
-    }
+	if included == 0 {
+		b.WriteString("# No selected computed attributes available for output conversion\n")
+	}
 
-    return b.String()
+	return b.String()
 }
 
 // resolveAttributeByPath traverses a schema block hierarchy to find an attribute at the given path.
 func resolveAttributeByPath(block *tfjson.SchemaBlock, path []string) (*tfjson.SchemaAttribute, bool) {
-    if block == nil {
-        return nil, false
-    }
-    if len(path) == 0 {
-        return nil, false
-    }
-    // Walk through nested blocks until last element
-    cur := block
-    for i := 0; i < len(path)-1; i++ {
-        nb, ok := cur.NestedBlocks[path[i]]
-        if !ok || nb == nil || nb.Block == nil {
-            return nil, false
-        }
-        cur = nb.Block
-    }
-    // Last element should resolve to an attribute
-    last := path[len(path)-1]
-    attr, ok := cur.Attributes[last]
-    if !ok || attr == nil {
-        return nil, false
-    }
-    return attr, true
+	if block == nil {
+		return nil, false
+	}
+	if len(path) == 0 {
+		return nil, false
+	}
+	// Walk through nested blocks until last element
+	cur := block
+	for i := 0; i < len(path)-1; i++ {
+		nb, ok := cur.NestedBlocks[path[i]]
+		if !ok || nb == nil || nb.Block == nil {
+			return nil, false
+		}
+		cur = nb.Block
+	}
+	// Last element should resolve to an attribute
+	last := path[len(path)-1]
+	attr, ok := cur.Attributes[last]
+	if !ok || attr == nil {
+		return nil, false
+	}
+	return attr, true
 }
 
 // convertTypeToHCLType converts Terraform schema types to HCL variable types

@@ -31,11 +31,11 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	)
 
 	// Navigate to tree view: entities → select entity → tree
-	
+
 	// 1. Wait for entities list to render
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
-		return bytes.Contains(b, []byte("aws_instance")) && 
-		       bytes.Contains(b, []byte("aws_s3_bucket"))
+		return bytes.Contains(b, []byte("aws_instance")) &&
+			bytes.Contains(b, []byte("aws_s3_bucket"))
 	}, teatest.WithDuration(5*time.Second))
 
 	t.Log("✅ Entities view loaded")
@@ -46,7 +46,7 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	// 3. Wait for tree view to appear
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return bytes.Contains(b, []byte("Schema (Arguments)")) &&
-		       bytes.Contains(b, []byte("press space to select"))
+			bytes.Contains(b, []byte("press space to select"))
 	}, teatest.WithDuration(5*time.Second))
 
 	t.Log("✅ Tree view loaded")
@@ -62,11 +62,11 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	t.Log("=== Testing DOWN arrow key ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeyDown})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterDownArrow := string(buf[:n])
 	t.Logf("After DOWN arrow:\n%s", afterDownArrow)
-	
+
 	// Check if anything changed
 	if afterDownArrow == initialState {
 		t.Errorf("❌ DOWN arrow key had no effect on tree")
@@ -78,7 +78,7 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	t.Log("=== Testing UP arrow key ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeyUp})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterUpArrow := string(buf[:n])
 	t.Logf("After UP arrow:\n%s", afterUpArrow)
@@ -87,16 +87,16 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	t.Log("=== Testing 'j' key (down) ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterJKey := string(buf[:n])
 	t.Logf("After 'j' key:\n%s", afterJKey)
 
-	// 7. Test k key navigation  
+	// 7. Test k key navigation
 	t.Log("=== Testing 'k' key (up) ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("k")})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterKKey := string(buf[:n])
 	t.Logf("After 'k' key:\n%s", afterKKey)
@@ -105,11 +105,11 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	t.Log("=== Testing spacebar selection ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeySpace})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterSpace := string(buf[:n])
 	t.Logf("After spacebar:\n%s", afterSpace)
-	
+
 	// Check if selection counter appeared
 	hasSelection := bytes.Contains([]byte(afterSpace), []byte("Selected:"))
 	if hasSelection {
@@ -122,11 +122,11 @@ func Test_TreeNavigationKeysIssue(t *testing.T) {
 	t.Log("=== Testing 'a' key (args/attrs toggle) ===")
 	tm.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("a")})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterAKey := string(buf[:n])
 	t.Logf("After 'a' key:\n%s", afterAKey)
-	
+
 	// Check if mode changed from Arguments to Attributes
 	hasAttributes := bytes.Contains([]byte(afterAKey), []byte("Schema (Attributes)"))
 	if hasAttributes {
@@ -153,14 +153,14 @@ func Test_TreeFocusTransition(t *testing.T) {
 	tm := teatest.NewTestModel(t, m, teatest.WithInitialTermSize(120, 30))
 
 	// Navigate step by step and check focus at each stage
-	
+
 	// 1. Initial state - entities should be focused
 	time.Sleep(100 * time.Millisecond)
 	output := tm.Output()
 	buf := make([]byte, 4096)
 	n, _ := output.Read(buf)
 	initialState := string(buf[:n])
-	
+
 	if bytes.Contains([]byte(initialState), []byte("press / to filter")) {
 		t.Log("✅ Entities are initially focused (has filter hint)")
 	} else {
@@ -170,15 +170,15 @@ func Test_TreeFocusTransition(t *testing.T) {
 	// 2. Press Enter to select entity and go to tree
 	tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
 	time.Sleep(200 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	treeState := string(buf[:n])
 	t.Logf("After Enter (should be tree view):\n%s", treeState)
-	
+
 	// Check if we're in tree view and if it looks properly focused
 	hasTreeTitle := bytes.Contains([]byte(treeState), []byte("Schema (Arguments)"))
 	hasTreeHint := bytes.Contains([]byte(treeState), []byte("press space to select"))
-	
+
 	if hasTreeTitle && hasTreeHint {
 		t.Log("✅ Successfully transitioned to tree view")
 	} else {
@@ -188,10 +188,10 @@ func Test_TreeFocusTransition(t *testing.T) {
 	// 3. Test if tree responds to keys immediately after focus
 	tm.Send(tea.KeyMsg{Type: tea.KeySpace}) // Should select current node
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	afterImmediateSpace := string(buf[:n])
-	
+
 	if bytes.Contains([]byte(afterImmediateSpace), []byte("Selected:")) {
 		t.Log("✅ Tree immediately responsive to keys after focus transition")
 	} else {

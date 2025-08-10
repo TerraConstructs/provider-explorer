@@ -32,9 +32,9 @@ func Test_CompleteFilterWorkflow(t *testing.T) {
 
 	// 1. Wait for initial state - should show both resources
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
-		return bytes.Contains(b, []byte("aws_instance")) && 
-		       bytes.Contains(b, []byte("aws_s3_bucket")) &&
-		       bytes.Contains(b, []byte("press / to filter"))
+		return bytes.Contains(b, []byte("aws_instance")) &&
+			bytes.Contains(b, []byte("aws_s3_bucket")) &&
+			bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(5*time.Second))
 
 	t.Log("✅ Initial state: Both resources visible")
@@ -43,8 +43,8 @@ func Test_CompleteFilterWorkflow(t *testing.T) {
 	tm.Type("/")
 
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
-		return bytes.Contains(b, []byte("Filter:")) && 
-		       bytes.Contains(b, []byte("Enter=apply, Esc=cancel"))
+		return bytes.Contains(b, []byte("Filter:")) &&
+			bytes.Contains(b, []byte("Enter=apply, Esc=cancel"))
 	}, teatest.WithDuration(5*time.Second))
 
 	t.Log("✅ Filter mode activated: Filter input visible with instructions")

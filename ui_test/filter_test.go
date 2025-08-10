@@ -32,15 +32,15 @@ func Test_EntityFilteringWorkflow(t *testing.T) {
 
 	// Wait for entities list to render with both resources and the focus hint
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
-		return bytes.Contains(b, []byte("aws_instance")) && 
-		       bytes.Contains(b, []byte("aws_s3_bucket")) &&
-		       bytes.Contains(b, []byte("press / to filter"))
+		return bytes.Contains(b, []byte("aws_instance")) &&
+			bytes.Contains(b, []byte("aws_s3_bucket")) &&
+			bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(5*time.Second))
 
 	// Press "/" to start filtering
 	tm.Type("/")
 
-	// Wait for filter mode to activate 
+	// Wait for filter mode to activate
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return bytes.Contains(b, []byte("Filter:")) && bytes.Contains(b, []byte("filtering"))
 	}, teatest.WithDuration(5*time.Second))
@@ -48,7 +48,7 @@ func Test_EntityFilteringWorkflow(t *testing.T) {
 	// Type "bucket" in the filter
 	tm.Type("bucket")
 
-	// Give time for the filtering to process 
+	// Give time for the filtering to process
 	time.Sleep(100 * time.Millisecond)
 
 	// Check the filtering results
@@ -77,7 +77,7 @@ func Test_EntityFilteringWorkflow(t *testing.T) {
 	if !hasFilterInStatus {
 		t.Errorf("FAIL: filter not shown in status bar")
 	}
-	
+
 	tm.Quit()
 }
 
@@ -103,7 +103,7 @@ func Test_FilterClearWorkflow(t *testing.T) {
 		return bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(5*time.Second))
 
-	// Start filtering 
+	// Start filtering
 	tm.Type("/bucket")
 
 	// Press Enter to apply the filter

@@ -120,7 +120,7 @@ func (m *ProvidersModel) SetSize(width, height int) {
 // SetSchemas updates the provider schemas and rebuilds the list
 func (m *ProvidersModel) SetSchemas(schemas *tfjson.ProviderSchemas) {
 	m.schemas = schemas
-	
+
 	// Build provider items
 	var items []list.Item
 	var keys []string
@@ -128,14 +128,14 @@ func (m *ProvidersModel) SetSchemas(schemas *tfjson.ProviderSchemas) {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	
+
 	for _, key := range keys {
 		items = append(items, ProviderItem{
 			name:   key,
 			schema: schemas.Schemas[key],
 		})
 	}
-	
+
 	m.list.SetItems(items)
 }
 
@@ -170,7 +170,7 @@ func (m ProvidersModel) Update(msg tea.Msg) (ProvidersModel, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	
+
 	return m, cmd
 }
 

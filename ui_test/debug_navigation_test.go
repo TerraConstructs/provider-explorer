@@ -37,28 +37,28 @@ func Test_DebugNavigationSequence(t *testing.T) {
 	// Step 2: Tab to focus types
 	tm.Send(tea.KeyMsg{Type: tea.KeyTab})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	t.Logf("=== AFTER TAB (Focus Types) ===\n%s", string(buf[:n]))
 
 	// Step 3: Down to Resources
 	tm.Send(tea.KeyMsg{Type: tea.KeyDown})
 	time.Sleep(100 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	t.Logf("=== AFTER DOWN (Should highlight Resources) ===\n%s", string(buf[:n]))
 
 	// Step 4: Enter to select Resources
 	tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
 	time.Sleep(200 * time.Millisecond)
-	
+
 	n, _ = output.Read(buf)
 	t.Logf("=== AFTER ENTER (Should show entities list) ===\n%s", string(buf[:n]))
 
 	// Check if both resources are visible
 	hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 	hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
-	
+
 	t.Logf("Has aws_instance: %v", hasInstance)
 	t.Logf("Has aws_s3_bucket: %v", hasBucket)
 

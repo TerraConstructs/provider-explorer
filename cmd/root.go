@@ -51,7 +51,7 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		if err := config.InitTerraformDirectory(absPath); err != nil {
 			return err
 		}
-    }
+	}
 
 	// Change to the working directory so the UI can load schemas
 	if err := os.Chdir(absPath); err != nil {

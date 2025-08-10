@@ -4,12 +4,12 @@
 package tree
 
 import (
-    "fmt"
+	"fmt"
 
-    tea "github.com/charmbracelet/bubbletea"
-    "github.com/charmbracelet/lipgloss"
-    tfjson "github.com/hashicorp/terraform-json"
-    "github.com/zclconf/go-cty/cty"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/zclconf/go-cty/cty"
 )
 
 var (
@@ -38,11 +38,11 @@ type SchemaNode struct {
 	path        []string
 	nodeType    SchemaNodeType
 	visible     bool
-	
+
 	// For attributes
 	attribute *tfjson.SchemaAttribute
-	
-	// For blocks  
+
+	// For blocks
 	block *tfjson.SchemaBlock
 }
 
@@ -55,11 +55,11 @@ const (
 
 // NewAttributeNode creates a new schema node for an attribute
 func NewAttributeNode(id, name string, attr *tfjson.SchemaAttribute, path []string) *SchemaNode {
-    // Create display text with type and status
-    typeInfo := ""
-    if attr.AttributeType != cty.NilType {
-        typeInfo = fmt.Sprintf(" (%s)", typeFriendlyLabel(attr.AttributeType))
-    }
+	// Create display text with type and status
+	typeInfo := ""
+	if attr.AttributeType != cty.NilType {
+		typeInfo = fmt.Sprintf(" (%s)", typeFriendlyLabel(attr.AttributeType))
+	}
 
 	status := ""
 	var style lipgloss.Style
@@ -89,37 +89,37 @@ func NewAttributeNode(id, name string, attr *tfjson.SchemaAttribute, path []stri
 
 // typeFriendlyLabel provides a simple, stable label for cty types for display.
 func typeFriendlyLabel(t cty.Type) string {
-    switch t { // handle primitives exactly
-    case cty.String:
-        return "string"
-    case cty.Number:
-        return "number"
-    case cty.Bool:
-        return "bool"
-    }
-    // collections and other shapes (avoid verbose/unstable formatting)
-    if t.IsListType() {
-        return "list"
-    }
-    if t.IsSetType() {
-        return "set"
-    }
-    if t.IsMapType() {
-        return "map"
-    }
-    if t.IsTupleType() {
-        return "tuple"
-    }
-    if t.IsObjectType() {
-        return "object"
-    }
-    return "any"
+	switch t { // handle primitives exactly
+	case cty.String:
+		return "string"
+	case cty.Number:
+		return "number"
+	case cty.Bool:
+		return "bool"
+	}
+	// collections and other shapes (avoid verbose/unstable formatting)
+	if t.IsListType() {
+		return "list"
+	}
+	if t.IsSetType() {
+		return "set"
+	}
+	if t.IsMapType() {
+		return "map"
+	}
+	if t.IsTupleType() {
+		return "tuple"
+	}
+	if t.IsObjectType() {
+		return "object"
+	}
+	return "any"
 }
 
 // NewBlockNode creates a new schema node for a block
 func NewBlockNode(id, name string, block *tfjson.SchemaBlock, path []string) *SchemaNode {
 	displayText := schemaArgumentStyle.Render(name + " [block]")
-	
+
 	return &SchemaNode{
 		id:          id,
 		name:        name,

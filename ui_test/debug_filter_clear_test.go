@@ -38,35 +38,35 @@ func Test_DebugFilterClear(t *testing.T) {
 			n, _ := output.Read(buf)
 			result := string(buf[:n])
 			t.Logf("Final output:\n%s", result)
-			
+
 			hasProvider := bytes.Contains(buf[:n], []byte("registry.terraform.io/hashicorp/aws"))
 			hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 			hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
 			hasFilterHint := bytes.Contains(buf[:n], []byte("press / to filter"))
-			
+
 			t.Logf("hasProvider: %v", hasProvider)
 			t.Logf("hasInstance: %v", hasInstance)
 			t.Logf("hasBucket: %v", hasBucket)
 			t.Logf("hasFilterHint: %v", hasFilterHint)
 			tm.Quit()
 			return
-			
+
 		case <-ticker.C:
 			output := tm.Output()
 			buf := make([]byte, 8192)
 			n, _ := output.Read(buf)
-			
+
 			hasProvider := bytes.Contains(buf[:n], []byte("registry.terraform.io/hashicorp/aws"))
 			hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 			hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
 			hasFilterHint := bytes.Contains(buf[:n], []byte("press / to filter"))
-			
+
 			if hasProvider && hasInstance && hasBucket && hasFilterHint {
 				t.Log("SUCCESS: All conditions met")
 				tm.Quit()
 				return
 			}
-			
+
 			// Log partial progress
 			if hasProvider {
 				t.Logf("Progress: provider=%v instance=%v bucket=%v filter=%v", hasProvider, hasInstance, hasBucket, hasFilterHint)

@@ -41,10 +41,10 @@ const (
 
 // TypeItem represents a resource type in the picker
 type TypeItem struct {
-	name     string
-	resType  ResourceType
-	enabled  bool
-	count    int
+	name    string
+	resType ResourceType
+	enabled bool
+	count   int
 }
 
 // FilterValue implements list.Item
@@ -144,7 +144,7 @@ func (m *TypesModel) SetCounts(dataSourceCount, resourceCount, ephemeralCount, f
 			count:   dataSourceCount,
 		},
 		TypeItem{
-			name:    "Resources", 
+			name:    "Resources",
 			resType: ResourcesType,
 			enabled: true,
 			count:   resourceCount,
@@ -258,7 +258,7 @@ func (m TypesModel) Update(msg tea.Msg) (TypesModel, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	
+
 	return m, cmd
 }
 

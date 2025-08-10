@@ -17,15 +17,15 @@ func Test_ProvidersComponent(t *testing.T) {
 	// Test providers component directly
 	providers := ui.NewProvidersModel(50, 20)
 	providers.SetSchemas(ps)
-	
+
 	// Get current provider
 	providerName, providerSchema := providers.SelectedProvider()
 	t.Logf("Selected provider: %s", providerName)
-	
+
 	if providerName == "" {
 		t.Log("No provider selected - this might be normal if list is empty")
 	}
-	
+
 	if providerSchema == nil {
 		t.Log("No provider schema - this might indicate an issue")
 	}

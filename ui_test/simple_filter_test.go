@@ -43,7 +43,7 @@ func Test_SimpleFilterStart(t *testing.T) {
 	// Give it a moment
 	time.Sleep(100 * time.Millisecond)
 
-	// Get output after "/" 
+	// Get output after "/"
 	buf2 := make([]byte, 4096)
 	n2, _ := output.Read(buf2)
 	t.Logf("Output after '/':\n%s", string(buf2[:n2]))

@@ -25,7 +25,7 @@ func Test_FilterExactTerms(t *testing.T) {
 
 	// Test different filter terms
 	testCases := []struct {
-		filter   string
+		filter         string
 		expectInstance bool
 		expectBucket   bool
 	}{
@@ -56,14 +56,14 @@ func Test_FilterExactTerms(t *testing.T) {
 			output := tm.Output()
 			buf := make([]byte, 8192)
 			n, _ := output.Read(buf)
-			
+
 			hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 			hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
-			
+
 			if hasInstance == tc.expectInstance && hasBucket == tc.expectBucket {
 				t.Logf("✅ Filter '%s': aws_instance=%v, aws_s3_bucket=%v (expected)", tc.filter, hasInstance, hasBucket)
 			} else {
-				t.Errorf("❌ Filter '%s': aws_instance=%v (exp %v), aws_s3_bucket=%v (exp %v)", 
+				t.Errorf("❌ Filter '%s': aws_instance=%v (exp %v), aws_s3_bucket=%v (exp %v)",
 					tc.filter, hasInstance, tc.expectInstance, hasBucket, tc.expectBucket)
 			}
 

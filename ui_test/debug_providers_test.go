@@ -34,14 +34,14 @@ func Test_DebugProvidersList(t *testing.T) {
 		teatest.WithInitialTermSize(120, 30),
 	)
 
-	// Give it some time to initialize 
+	// Give it some time to initialize
 	time.Sleep(100 * time.Millisecond)
 
 	// Get output and log it
 	output := tm.Output()
 	buf := make([]byte, 4096)
 	n, _ := output.Read(buf)
-	
+
 	fullOutput := string(buf[:n])
 	t.Logf("Full teatest output:\n%s", fullOutput)
 

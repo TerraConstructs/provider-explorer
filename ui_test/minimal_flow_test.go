@@ -36,7 +36,7 @@ func Test_MinimalFlowThatShouldWork(t *testing.T) {
 
 	// Step 2: Try simple navigation - just enter to select an entity
 	tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
-	
+
 	// Give it a moment
 	time.Sleep(200 * time.Millisecond)
 
@@ -47,10 +47,10 @@ func Test_MinimalFlowThatShouldWork(t *testing.T) {
 	buf := make([]byte, 8192)
 	n, _ := output.Read(buf)
 	result := string(buf[:n])
-	
+
 	hasSchema := bytes.Contains(buf[:n], []byte("Schema ("))
 	t.Logf("Has Schema view: %v", hasSchema)
-	
+
 	if hasSchema {
 		t.Log("✅ Successfully navigated to schema view")
 	} else {

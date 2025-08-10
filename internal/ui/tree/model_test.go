@@ -1,5 +1,5 @@
 // Copyright (c) 2024 Anchore, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -146,39 +146,39 @@ func TestModel_View(t *testing.T) {
 
 func TestModel_Selection(t *testing.T) {
 	subject := NewModel()
-	
+
 	require.NoError(t, subject.Add("", "a", dummyViewer{state: "node-a"}))
 	require.NoError(t, subject.Add("", "b", dummyViewer{state: "node-b"}))
-	
+
 	// Initially nothing selected
 	require.False(t, subject.IsSelected("a"))
 	require.False(t, subject.IsSelected("b"))
 	require.Empty(t, subject.GetSelectedNodes())
-	
+
 	// Select node a
 	subject.ToggleSelection("a")
 	require.True(t, subject.IsSelected("a"))
 	require.False(t, subject.IsSelected("b"))
-	
+
 	selected := subject.GetSelectedNodes()
 	require.Len(t, selected, 1)
 	require.Contains(t, selected, "a")
-	
+
 	// Select node b
 	subject.ToggleSelection("b")
 	require.True(t, subject.IsSelected("a"))
 	require.True(t, subject.IsSelected("b"))
-	
+
 	selected = subject.GetSelectedNodes()
 	require.Len(t, selected, 2)
 	require.Contains(t, selected, "a")
 	require.Contains(t, selected, "b")
-	
+
 	// Deselect node a
 	subject.ToggleSelection("a")
 	require.False(t, subject.IsSelected("a"))
 	require.True(t, subject.IsSelected("b"))
-	
+
 	selected = subject.GetSelectedNodes()
 	require.Len(t, selected, 1)
 	require.Contains(t, selected, "b")
@@ -187,19 +187,19 @@ func TestModel_Selection(t *testing.T) {
 func TestModel_Scrolling(t *testing.T) {
 	subject := NewModel()
 	subject.SetHeight(3) // Very small height to test scrolling
-	
+
 	// Add enough nodes to require scrolling
 	for i := 0; i < 10; i++ {
 		require.NoError(t, subject.Add("", fmt.Sprintf("node%d", i), dummyViewer{state: fmt.Sprintf("Node %d", i)}))
 	}
-	
+
 	// Test initial view (should show first 3 items)
 	initialView := subject.View()
 	require.Contains(t, initialView, "Node 0")
-	require.Contains(t, initialView, "Node 1") 
+	require.Contains(t, initialView, "Node 1")
 	require.Contains(t, initialView, "Node 2")
 	require.NotContains(t, initialView, "Node 3")
-	
+
 	// Test scrolling down - need to get the updated model
 	updatedModel, _ := subject.Update(tea.KeyMsg{Type: tea.KeyDown})
 	scrolledSubject := updatedModel.(Model)

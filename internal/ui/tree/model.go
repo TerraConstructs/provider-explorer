@@ -1,5 +1,5 @@
 // Copyright (c) 2024 Anchore, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,13 +18,13 @@
 package tree
 
 import (
-    "errors"
-    "strings"
-    "sync"
+	"errors"
+	"strings"
+	"sync"
 
-    tea "github.com/charmbracelet/bubbletea"
-    "github.com/charmbracelet/lipgloss"
-    "github.com/scylladb/go-set/strset"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/scylladb/go-set/strset"
 )
 
 var _ tea.Model = (*Model)(nil)
@@ -37,11 +37,11 @@ type Model struct {
 	lock     *sync.RWMutex
 
 	// Selection and scrolling support (extensions)
-    selected    map[string]bool // tracks which nodes are selected
+	selected    map[string]bool // tracks which nodes are selected
 	viewport    int             // current scroll position
 	height      int             // available display height
 	totalHeight int             // total content height
-    cursor      int             // current cursor position (visible line index)
+	cursor      int             // current cursor position (visible line index)
 
 	// formatting options
 	Margin                    string
@@ -81,16 +81,16 @@ func (m *Model) SetHeight(height int) {
 
 // ToggleSelection toggles the selection state of a node (extension)
 func (m *Model) ToggleSelection(id string) {
-    m.lock.Lock()
-    defer m.lock.Unlock()
-    m.selected[id] = !m.selected[id]
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	m.selected[id] = !m.selected[id]
 }
 
 // SetSelection explicitly sets the selection state of a node (extension)
 func (m *Model) SetSelection(id string, selected bool) {
-    m.lock.Lock()
-    defer m.lock.Unlock()
-    m.selected[id] = selected
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	m.selected[id] = selected
 }
 
 // IsSelected returns whether a node is selected (extension)
@@ -104,7 +104,7 @@ func (m Model) IsSelected(id string) bool {
 func (m Model) GetSelectedNodes() []string {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	
+
 	var selected []string
 	for id, isSelected := range m.selected {
 		if isSelected {
@@ -116,9 +116,9 @@ func (m Model) GetSelectedNodes() []string {
 
 // GetVisibleNodes returns all visible node IDs in order (extension)
 func (m Model) GetVisibleNodes() []string {
-    m.lock.RLock()
-    defer m.lock.RUnlock()
-    return m.getVisibleNodesUnsafe()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return m.getVisibleNodesUnsafe()
 }
 
 // collectVisibleNodes recursively collects visible node IDs
@@ -127,11 +127,11 @@ func (m Model) collectVisibleNodes(id string, observed *strset.Set, result *[]st
 		return
 	}
 	observed.Add(id)
-	
+
 	node := m.nodes[id]
 	if node.IsVisible() {
 		*result = append(*result, id)
-		
+
 		// Add children
 		for _, childID := range m.children[id] {
 			m.collectVisibleNodes(childID, observed, result)
@@ -141,40 +141,40 @@ func (m Model) collectVisibleNodes(id string, observed *strset.Set, result *[]st
 
 // GetCurrentNode returns the node ID at the cursor position (extension)
 func (m Model) GetCurrentNode() string {
-    visibleNodes := m.GetVisibleNodes()
-    if m.cursor >= 0 && m.cursor < len(visibleNodes) {
-        return visibleNodes[m.cursor]
-    }
-    return ""
+	visibleNodes := m.GetVisibleNodes()
+	if m.cursor >= 0 && m.cursor < len(visibleNodes) {
+		return visibleNodes[m.cursor]
+	}
+	return ""
 }
 
 // getVisibleNodesUnsafe returns visible nodes without acquiring locks.
 // Callers must ensure appropriate synchronization.
 func (m Model) getVisibleNodesUnsafe() []string {
-    var visibleNodes []string
-    observed := strset.New()
-    for _, id := range m.roots {
-        m.collectVisibleNodes(id, observed, &visibleNodes)
-    }
-    return visibleNodes
+	var visibleNodes []string
+	observed := strset.New()
+	for _, id := range m.roots {
+		m.collectVisibleNodes(id, observed, &visibleNodes)
+	}
+	return visibleNodes
 }
 
 // SelectAll selects all visible nodes (extension)
 func (m *Model) SelectAll() {
-    m.lock.Lock()
-    defer m.lock.Unlock()
-    // Avoid deadlock: compute visible nodes without taking another lock
-    visibleNodes := m.getVisibleNodesUnsafe()
-    for _, nodeID := range visibleNodes {
-        m.selected[nodeID] = true
-    }
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	// Avoid deadlock: compute visible nodes without taking another lock
+	visibleNodes := m.getVisibleNodesUnsafe()
+	for _, nodeID := range visibleNodes {
+		m.selected[nodeID] = true
+	}
 }
 
 // ClearSelection clears all selected nodes (extension)
 func (m *Model) ClearSelection() {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	
+
 	m.selected = make(map[string]bool)
 }
 
@@ -205,7 +205,7 @@ func (m *Model) Remove(id string) {
 	delete(m.children, id)
 	delete(m.parents, id)
 	delete(m.selected, id) // extension: clean up selection state
-	
+
 	for _, children := range m.children {
 		for i, child := range children {
 			if child == id {
@@ -222,163 +222,163 @@ func (m *Model) Remove(id string) {
 }
 
 func (m Model) Init() tea.Cmd {
-    return nil
+	return nil
 }
 
 // MoveDown moves the cursor/viewport down by one line
 func (m *Model) MoveDown() {
-    visibleNodes := m.getVisibleNodesUnsafe()
-    if len(visibleNodes) == 0 {
-        return
-    }
-    // Move cursor first
-    if m.cursor < len(visibleNodes)-1 {
-        m.cursor++
-    }
-    // Scroll only to keep cursor in view
-    if m.height > 0 && m.cursor >= m.viewport+m.height {
-        m.viewport = m.cursor - m.height + 1
-    }
+	visibleNodes := m.getVisibleNodesUnsafe()
+	if len(visibleNodes) == 0 {
+		return
+	}
+	// Move cursor first
+	if m.cursor < len(visibleNodes)-1 {
+		m.cursor++
+	}
+	// Scroll only to keep cursor in view
+	if m.height > 0 && m.cursor >= m.viewport+m.height {
+		m.viewport = m.cursor - m.height + 1
+	}
 }
 
 // MoveUp moves the cursor/viewport up by one line
 func (m *Model) MoveUp() {
-    // Move cursor first
-    if m.cursor > 0 {
-        m.cursor--
-    }
-    // Scroll only to keep cursor in view
-    if m.height > 0 && m.cursor < m.viewport {
-        m.viewport = m.cursor
-    }
+	// Move cursor first
+	if m.cursor > 0 {
+		m.cursor--
+	}
+	// Scroll only to keep cursor in view
+	if m.height > 0 && m.cursor < m.viewport {
+		m.viewport = m.cursor
+	}
 }
 
 // MovePageDown moves the cursor down by one page and scrolls to keep it visible
 func (m *Model) MovePageDown() {
-    visible := m.getVisibleNodesUnsafe()
-    if len(visible) == 0 || m.height <= 0 {
-        // Fallback to single-line move if no paging context
-        m.MoveDown()
-        return
-    }
-    target := m.cursor + m.height
-    if target > len(visible)-1 {
-        target = len(visible) - 1
-    }
-    m.cursor = target
-    // Place cursor at bottom of viewport
-    if m.cursor >= m.viewport+m.height {
-        m.viewport = m.cursor - m.height + 1
-    }
+	visible := m.getVisibleNodesUnsafe()
+	if len(visible) == 0 || m.height <= 0 {
+		// Fallback to single-line move if no paging context
+		m.MoveDown()
+		return
+	}
+	target := m.cursor + m.height
+	if target > len(visible)-1 {
+		target = len(visible) - 1
+	}
+	m.cursor = target
+	// Place cursor at bottom of viewport
+	if m.cursor >= m.viewport+m.height {
+		m.viewport = m.cursor - m.height + 1
+	}
 }
 
 // MovePageUp moves the cursor up by one page and scrolls to keep it visible
 func (m *Model) MovePageUp() {
-    visible := m.getVisibleNodesUnsafe()
-    if len(visible) == 0 || m.height <= 0 {
-        // Fallback to single-line move if no paging context
-        m.MoveUp()
-        return
-    }
-    target := m.cursor - m.height
-    if target < 0 {
-        target = 0
-    }
-    m.cursor = target
-    // Ensure cursor is at top of viewport
-    if m.cursor < m.viewport {
-        m.viewport = m.cursor
-    }
+	visible := m.getVisibleNodesUnsafe()
+	if len(visible) == 0 || m.height <= 0 {
+		// Fallback to single-line move if no paging context
+		m.MoveUp()
+		return
+	}
+	target := m.cursor - m.height
+	if target < 0 {
+		target = 0
+	}
+	m.cursor = target
+	// Ensure cursor is at top of viewport
+	if m.cursor < m.viewport {
+		m.viewport = m.cursor
+	}
 }
 
 // Clamp ensures viewport and cursor are within valid bounds relative to
 // the current visible nodes and height. It keeps the cursor visible.
 func (m *Model) Clamp() {
-    visible := m.getVisibleNodesUnsafe()
-    n := len(visible)
-    if n == 0 {
-        m.viewport = 0
-        m.cursor = 0
-        return
-    }
-    if m.height < 0 {
-        m.height = 0
-    }
-    if m.cursor < 0 {
-        m.cursor = 0
-    }
-    if m.cursor > n-1 {
-        m.cursor = n - 1
-    }
-    // viewport must be in [0, maxStart]
-    maxStart := n - m.height
-    if maxStart < 0 {
-        maxStart = 0
-    }
-    if m.viewport < 0 {
-        m.viewport = 0
-    }
-    if m.viewport > maxStart {
-        m.viewport = maxStart
-    }
-    // Keep cursor within viewport window
-    if m.height > 0 {
-        if m.cursor < m.viewport {
-            m.viewport = m.cursor
-        } else if m.cursor >= m.viewport+m.height {
-            m.viewport = m.cursor - m.height + 1
-        }
-    }
+	visible := m.getVisibleNodesUnsafe()
+	n := len(visible)
+	if n == 0 {
+		m.viewport = 0
+		m.cursor = 0
+		return
+	}
+	if m.height < 0 {
+		m.height = 0
+	}
+	if m.cursor < 0 {
+		m.cursor = 0
+	}
+	if m.cursor > n-1 {
+		m.cursor = n - 1
+	}
+	// viewport must be in [0, maxStart]
+	maxStart := n - m.height
+	if maxStart < 0 {
+		maxStart = 0
+	}
+	if m.viewport < 0 {
+		m.viewport = 0
+	}
+	if m.viewport > maxStart {
+		m.viewport = maxStart
+	}
+	// Keep cursor within viewport window
+	if m.height > 0 {
+		if m.cursor < m.viewport {
+			m.viewport = m.cursor
+		} else if m.cursor >= m.viewport+m.height {
+			m.viewport = m.cursor - m.height + 1
+		}
+	}
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds tea.Cmd
-	
+
 	// Create a copy to allow mutations
 	newModel := m
-	
+
 	// Handle keyboard input for scrolling and selection (extensions)
-    switch msg := msg.(type) {
-    case tea.KeyMsg:
-        switch msg.String() {
-        case "up", "k": // Scroll up by one line when height is set
-            // Primary behavior: scroll viewport up
-            if newModel.height > 0 && newModel.viewport > 0 {
-                newModel.viewport--
-            } else if newModel.cursor > 0 { // fallback cursor move
-                newModel.cursor--
-                if newModel.cursor < newModel.viewport {
-                    newModel.viewport--
-                }
-            }
-        case "down", "j": // Scroll down by one line when height is set
-            visibleNodes := newModel.GetVisibleNodes()
-            if newModel.height > 0 {
-                // Only scroll if there are more lines below the viewport
-                if newModel.viewport+newModel.height < len(visibleNodes) {
-                    newModel.viewport++
-                }
-                // Keep cursor within bounds of visible content
-                if newModel.cursor < newModel.viewport {
-                    newModel.cursor = newModel.viewport
-                }
-            } else {
-                // Fallback cursor navigation when no height constraint
-                if newModel.cursor < len(visibleNodes)-1 {
-                    newModel.cursor++
-                }
-            }
-        case "pgup":
-            newModel.viewport -= newModel.height / 2
-            if newModel.viewport < 0 {
-                newModel.viewport = 0
-            }
-        case "pgdown":
-            newModel.viewport += newModel.height / 2
-            // View() will handle bounds checking
-        }
-    }
-	
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "up", "k": // Scroll up by one line when height is set
+			// Primary behavior: scroll viewport up
+			if newModel.height > 0 && newModel.viewport > 0 {
+				newModel.viewport--
+			} else if newModel.cursor > 0 { // fallback cursor move
+				newModel.cursor--
+				if newModel.cursor < newModel.viewport {
+					newModel.viewport--
+				}
+			}
+		case "down", "j": // Scroll down by one line when height is set
+			visibleNodes := newModel.GetVisibleNodes()
+			if newModel.height > 0 {
+				// Only scroll if there are more lines below the viewport
+				if newModel.viewport+newModel.height < len(visibleNodes) {
+					newModel.viewport++
+				}
+				// Keep cursor within bounds of visible content
+				if newModel.cursor < newModel.viewport {
+					newModel.cursor = newModel.viewport
+				}
+			} else {
+				// Fallback cursor navigation when no height constraint
+				if newModel.cursor < len(visibleNodes)-1 {
+					newModel.cursor++
+				}
+			}
+		case "pgup":
+			newModel.viewport -= newModel.height / 2
+			if newModel.viewport < 0 {
+				newModel.viewport = 0
+			}
+		case "pgdown":
+			newModel.viewport += newModel.height / 2
+			// View() will handle bounds checking
+		}
+	}
+
 	// Update child nodes
 	for id := range newModel.nodes {
 		model, cmd := newModel.nodes[id].Update(msg)
@@ -408,11 +408,11 @@ func (m Model) View() string {
 	if fullContent == "" {
 		return ""
 	}
-	
+
 	contentLines := strings.Split(fullContent, "\n")
 	// Note: We can't mutate m.totalHeight here since this is a value receiver
 	// The scrolling logic will need to be updated to work with the current content
-	
+
 	// Apply scrolling if needed (extension)
 	if m.height > 0 && len(contentLines) > m.height {
 		start := m.viewport
@@ -487,29 +487,29 @@ func (m Model) renderNodeWithCursor(siblingIdx int, id string, observed *strset.
 
 	sb := strings.Builder{}
 
-    // add the node's view with selection indicator (extension)
-    current := node.View()
-    linesRendered := 0
-    if len(current) > 0 {
-        // Add selection checkbox prefix
-        selectionPrefix := "[ ] "
-        if m.IsSelected(id) {
-            selectionPrefix = "[x] "
-        }
-        
-        // Add cursor highlighting if this is the current line
-        isCursorLine := *currentLine == m.cursor
-        cursorMarker := "  "
-        if isCursorLine {
-            cursorMarker = "> "
-        }
-        fullLine := cursorMarker + selectionPrefix + current
-        if isCursorLine {
-            // Make the entire cursor line bold for visibility
-            fullLine = lipgloss.NewStyle().Bold(true).Render(fullLine)
-        }
-        current = fullLine
-		
+	// add the node's view with selection indicator (extension)
+	current := node.View()
+	linesRendered := 0
+	if len(current) > 0 {
+		// Add selection checkbox prefix
+		selectionPrefix := "[ ] "
+		if m.IsSelected(id) {
+			selectionPrefix = "[x] "
+		}
+
+		// Add cursor highlighting if this is the current line
+		isCursorLine := *currentLine == m.cursor
+		cursorMarker := "  "
+		if isCursorLine {
+			cursorMarker = "> "
+		}
+		fullLine := cursorMarker + selectionPrefix + current
+		if isCursorLine {
+			// Make the entire cursor line bold for visibility
+			fullLine = lipgloss.NewStyle().Bold(true).Render(fullLine)
+		}
+		current = fullLine
+
 		sb.WriteString(m.prefixLines(current, prefix.String(), m.hasChildren(id)))
 		sb.WriteString("\n")
 		linesRendered = 1

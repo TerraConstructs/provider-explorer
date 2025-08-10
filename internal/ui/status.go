@@ -18,21 +18,28 @@ var (
 			Bold(true)
 
 	statusValueStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("252"))
+				Foreground(lipgloss.Color("252"))
 
 	statusSeparatorStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("240")).
 				SetString(" | ")
+
+	statusHelpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("244")). // Brighter than regular values but dimmer than keys
+			Italic(true)                       // Subtle visual distinction
 )
 
 // StatusBar renders a status bar showing tool info, provider, type, and current filter
 type StatusBar struct {
-	width        int
-	toolInfo     terraform.TerraformInfo
-	version      string
-	provider     string
-	resourceType string
-	filter       string
+	width           int
+	toolInfo        terraform.TerraformInfo
+	version         string
+	provider        string
+	resourceType    string
+	filter          string
+	copyMessage     string
+	copyMessageType string // "success" or "error"
+	helpText        string
 }
 
 // NewStatusBar creates a new status bar
@@ -66,6 +73,23 @@ func (s *StatusBar) SetResourceType(resourceType string) {
 // SetFilter updates the current filter
 func (s *StatusBar) SetFilter(filter string) {
 	s.filter = filter
+}
+
+// SetCopyStatus updates the copy status message
+func (s *StatusBar) SetCopyStatus(message, messageType string) {
+	s.copyMessage = message
+	s.copyMessageType = messageType
+}
+
+// ClearCopyStatus clears the copy status message
+func (s *StatusBar) ClearCopyStatus() {
+	s.copyMessage = ""
+	s.copyMessageType = ""
+}
+
+// SetHelpText updates the help text
+func (s *StatusBar) SetHelpText(helpText string) {
+	s.helpText = helpText
 }
 
 // Render renders the status bar
@@ -103,16 +127,105 @@ func (s StatusBar) Render() string {
 		parts = append(parts, statusValueStyle.Render("Loading..."))
 	}
 
-	// Join parts with separator
-	content := ""
+	// Build left side (existing info)
+	leftContent := ""
 	for i, part := range parts {
 		if i > 0 {
-			content += statusSeparatorStyle.Render()
+			leftContent += statusSeparatorStyle.Render()
 		}
-		content += part
+		leftContent += part
+	}
+
+	// Build center content (copy status)
+	centerContent := ""
+	if s.copyMessage != "" {
+		var copyStyle lipgloss.Style
+		if s.copyMessageType == "success" {
+			copyStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("10")). // Green
+				Bold(true)
+		} else {
+			copyStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("9")). // Red
+				Bold(true)
+		}
+		centerContent = copyStyle.Render(s.copyMessage)
+	}
+
+	// Build right content (help text)
+	rightContent := ""
+	if s.helpText != "" {
+		rightContent = statusHelpStyle.Render(s.helpText)
+	}
+
+	// Calculate content widths
+	leftWidth := lipgloss.Width(leftContent)
+	centerWidth := lipgloss.Width(centerContent)
+	rightWidth := lipgloss.Width(rightContent)
+
+	// Use fixed positioning approach to prevent layout shifting
+	contentWidth := s.width - 2 // Account for padding
+
+	var finalContent string
+
+	// Check if we have enough space for all content
+	minRequiredWidth := leftWidth + centerWidth + rightWidth + 2 // Minimum spacing
+
+	if contentWidth >= minRequiredWidth {
+		// Create a buffer of the full content width
+		buffer := make([]rune, contentWidth)
+		for i := range buffer {
+			buffer[i] = ' '
+		}
+
+		// Place left content at start
+		leftRunes := []rune(leftContent)
+		copy(buffer[0:], leftRunes)
+
+		// Place right content at end (fixed position)
+		if rightWidth > 0 {
+			rightRunes := []rune(rightContent)
+			rightStart := contentWidth - rightWidth
+			if rightStart >= leftWidth+2 { // Ensure no overlap
+				copy(buffer[rightStart:], rightRunes)
+			}
+		}
+
+		// Place center content at true center. Prioritize visibility: overlay even if it overlaps
+		// with left or right details so transient messages (like copy status) are always seen.
+		if centerWidth > 0 {
+			centerStart := (contentWidth - centerWidth) / 2
+			if centerStart < 0 {
+				centerStart = 0
+			}
+			if centerStart+centerWidth > contentWidth {
+				centerStart = contentWidth - centerWidth
+				if centerStart < 0 {
+					centerStart = 0
+				}
+			}
+			centerRunes := []rune(centerContent)
+			copy(buffer[centerStart:], centerRunes)
+		}
+
+		finalContent = string(buffer)
+	} else {
+		// Not enough space - fallback to simple layout prioritizing center content
+		if centerContent != "" && rightContent != "" {
+			// Show center message and right help, skip left details if needed
+			finalContent = centerContent + " | " + rightContent
+		} else if centerContent != "" {
+			// Show left info and center message
+			finalContent = leftContent + " " + centerContent
+		} else if rightContent != "" {
+			// Show left info and right help
+			finalContent = leftContent + " | " + rightContent
+		} else {
+			finalContent = leftContent
+		}
 	}
 
 	// Apply overall style and fit to width
-	styled := statusStyle.Width(s.width).Render(content)
+	styled := statusStyle.Width(s.width).Render(finalContent)
 	return styled
 }

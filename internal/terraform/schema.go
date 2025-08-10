@@ -19,16 +19,16 @@ type SchemaWithVersionInfo struct {
 func FetchAllProviderSchemas(workingDir string) (*SchemaWithVersionInfo, error) {
 	tfInfo := FindTerraformBinary()
 
-    if cachedSchema, err := ReadProviderSchemaFromCache(workingDir); err == nil {
-        // Always update TfInfo with current binary detection to ensure correct tool priority
-        cachedSchema.TfInfo = tfInfo
-        return cachedSchema, nil
-    }
+	if cachedSchema, err := ReadProviderSchemaFromCache(workingDir); err == nil {
+		// Always update TfInfo with current binary detection to ensure correct tool priority
+		cachedSchema.TfInfo = tfInfo
+		return cachedSchema, nil
+	}
 
-    // Fetch provider schemas from the tool
-    schemaCmd := exec.Command(tfInfo.Binary, "providers", "schema", "-json")
-    schemaCmd.Dir = workingDir
-    schemaCmd.Stderr = os.Stderr
+	// Fetch provider schemas from the tool
+	schemaCmd := exec.Command(tfInfo.Binary, "providers", "schema", "-json")
+	schemaCmd.Dir = workingDir
+	schemaCmd.Stderr = os.Stderr
 	schemaOutput, err := schemaCmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("terraform providers schema failed: %w", err)

@@ -39,25 +39,25 @@ func Test_SafeDebugWaitCondition(t *testing.T) {
 			buf := make([]byte, 8192)
 			n, _ := output.Read(buf)
 			t.Logf("Final output:\n%s", string(buf[:n]))
-			
+
 			hasProvider := bytes.Contains(buf[:n], []byte("registry.terraform.io/hashicorp/aws"))
 			hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 			hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
-			
+
 			t.Logf("hasProvider: %v", hasProvider)
 			t.Logf("hasInstance: %v", hasInstance)
 			t.Logf("hasBucket: %v", hasBucket)
 			return
-			
+
 		case <-ticker.C:
 			output := tm.Output()
 			buf := make([]byte, 8192)
 			n, _ := output.Read(buf)
-			
+
 			hasProvider := bytes.Contains(buf[:n], []byte("registry.terraform.io/hashicorp/aws"))
 			hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 			hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
-			
+
 			if hasProvider && hasInstance && hasBucket {
 				t.Log("SUCCESS: All conditions met")
 				success = true

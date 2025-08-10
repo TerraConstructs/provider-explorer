@@ -23,7 +23,7 @@ func Test_FilterForInstance(t *testing.T) {
 	m := ui.NewModelWithSchemas(ps, 120, 30)
 	tm := teatest.NewTestModel(t, m, teatest.WithInitialTermSize(120, 30))
 
-	// Wait for initial load 
+	// Wait for initial load
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		hasProvider := bytes.Contains(b, []byte("registry.terraform.io/hashicorp/aws"))
 		hasInstance := bytes.Contains(b, []byte("aws_instance"))
@@ -33,7 +33,7 @@ func Test_FilterForInstance(t *testing.T) {
 
 	// Try filtering for "instance" instead of "inst"
 	tm.Type("/instance")
-	
+
 	time.Sleep(200 * time.Millisecond)
 
 	// Check current output
@@ -41,12 +41,12 @@ func Test_FilterForInstance(t *testing.T) {
 	buf := make([]byte, 8192)
 	n, _ := output.Read(buf)
 	result := string(buf[:n])
-	
+
 	hasInstance := bytes.Contains(buf[:n], []byte("aws_instance"))
 	hasBucket := bytes.Contains(buf[:n], []byte("aws_s3_bucket"))
-	
+
 	t.Logf("After filtering for 'instance': Has aws_instance: %v, Has aws_s3_bucket: %v", hasInstance, hasBucket)
-	
+
 	if hasInstance && !hasBucket {
 		t.Log("✅ Filtering for 'instance' works!")
 	} else {

@@ -24,7 +24,7 @@ func Test_SimpleFlowWithoutExport(t *testing.T) {
 	m := ui.NewModelWithSchemas(ps, 120, 30)
 	tm := teatest.NewTestModel(t, m, teatest.WithInitialTermSize(120, 30))
 
-	// 1) Wait for initial load 
+	// 1) Wait for initial load
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(5*time.Second))

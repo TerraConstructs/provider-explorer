@@ -37,7 +37,7 @@ func Test_StepByStepModelConstruction(t *testing.T) {
 	// Check if providers has items now
 	providerName, providerSchema := providers.SelectedProvider()
 	t.Logf("After setting schemas - Selected provider: %s", providerName)
-	
+
 	if providerSchema != nil {
 		t.Logf("Provider schema has %d resources", len(providerSchema.ResourceSchemas))
 	}
@@ -50,7 +50,7 @@ func Test_StepByStepModelConstruction(t *testing.T) {
 	m := ui.NewModelWithSchemas(ps, width, height)
 	t.Log("Full model created")
 
-	// Check providers in full model  
+	// Check providers in full model
 	fullView := m.View()
 	t.Logf("Full model view:\n%s", fullView)
 }

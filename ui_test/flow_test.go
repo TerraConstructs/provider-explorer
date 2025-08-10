@@ -34,14 +34,14 @@ func Test_HappyPath_ProviderSelect_TypeSelect_EntityBrowse_Export(t *testing.T) 
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return len(b) > 0
 	}, teatest.WithDuration(3*time.Second))
-	
-	// Wait for initial load 
+
+	// Wait for initial load
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return bytes.Contains(b, []byte("registry.terraform.io/hashicorp/aws")) &&
-		       bytes.Contains(b, []byte("press / to filter"))
+			bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(5*time.Second))
 
-	// Start filtering with "/" and type "bucket" to narrow to aws_s3_bucket  
+	// Start filtering with "/" and type "bucket" to narrow to aws_s3_bucket
 	tm.Type("/")
 	tm.Type("bucket")
 
@@ -94,7 +94,7 @@ func Test_FilterFocusToggle(t *testing.T) {
 		teatest.WithInitialTermSize(100, 25),
 	)
 
-	// Wait for initial load 
+	// Wait for initial load
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {
 		return bytes.Contains(b, []byte("press / to filter"))
 	}, teatest.WithDuration(2*time.Second))
@@ -134,7 +134,7 @@ func Test_TreeExpandCollapseSelection(t *testing.T) {
 	)
 
 	// Navigate to tree view (entities already loaded, just select first one)
-	tm.Send(tea.KeyMsg{Type: tea.KeyEnter})  // select entity (first one)
+	tm.Send(tea.KeyMsg{Type: tea.KeyEnter}) // select entity (first one)
 
 	// Wait for tree to appear
 	teatest.WaitFor(t, tm.Output(), func(b []byte) bool {

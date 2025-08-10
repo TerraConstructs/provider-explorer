@@ -112,21 +112,21 @@ func Test_ConvertToHCL_SwitchBySection(t *testing.T) {
 
 	// Test Arguments section
 	argsResult := ui.ConvertToHCL("aws_instance", instanceSchema, ui.ArgumentsSection, "registry.terraform.io/hashicorp/aws")
-	
+
 	if !strings.Contains(argsResult, "variable") {
 		t.Errorf("Arguments section should produce variables, got: %s", argsResult)
 	}
 
-	// Test Attributes section  
+	// Test Attributes section
 	attrsResult := ui.ConvertToHCL("aws_instance", instanceSchema, ui.AttributesSection, "registry.terraform.io/hashicorp/aws")
-	
+
 	if !strings.Contains(attrsResult, "output") {
 		t.Errorf("Attributes section should produce outputs, got: %s", attrsResult)
 	}
 
 	// Test unknown section
 	unknownResult := ui.ConvertToHCL("aws_instance", instanceSchema, "Unknown", "registry.terraform.io/hashicorp/aws")
-	
+
 	if unknownResult != "# Unknown section type" {
 		t.Errorf("Unknown section should return error message, got: %s", unknownResult)
 	}

@@ -11,21 +11,21 @@ type KeyMap struct {
 	Right key.Binding
 
 	// Focus
-	Tab     key.Binding
-	Enter   key.Binding
-	Escape  key.Binding
-	
+	Tab    key.Binding
+	Enter  key.Binding
+	Escape key.Binding
+
 	// Actions
 	Space  key.Binding
 	Export key.Binding
 	Copy   key.Binding
-	
+
 	// Toggle modes
 	ToggleArgsAttrs key.Binding
-	
+
 	// Quit
 	Quit key.Binding
-	
+
 	// Help
 	Help key.Binding
 }
@@ -96,9 +96,9 @@ func (k KeyMap) ShortHelp() []key.Binding {
 // FullHelp returns keybindings for the expanded help view
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right}, // navigation
-		{k.Tab, k.Enter, k.Escape},      // focus
-		{k.Space, k.Export, k.Copy},     // actions
+		{k.Up, k.Down, k.Left, k.Right},     // navigation
+		{k.Tab, k.Enter, k.Escape},          // focus
+		{k.Space, k.Export, k.Copy},         // actions
 		{k.ToggleArgsAttrs, k.Help, k.Quit}, // misc
 	}
 }

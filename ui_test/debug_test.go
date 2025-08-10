@@ -46,7 +46,7 @@ func Test_ModelWithSchemas(t *testing.T) {
 	}
 
 	m := ui.NewModelWithSchemas(ps, 120, 30)
-	
+
 	// Check if schemas are set
 	if m.GetSchemas() == nil {
 		t.Fatal("Schemas not set in model")

@@ -13,8 +13,8 @@ import (
 
 var (
 	entityTitleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("212"))
+				Bold(true).
+				Foreground(lipgloss.Color("212"))
 
 	entityItemStyle = lipgloss.NewStyle().
 			PaddingLeft(2)
@@ -94,13 +94,13 @@ func (d entityDelegate) Render(w io.Writer, m list.Model, index int, listItem li
 
 // EntitiesModel manages the entities list
 type EntitiesModel struct {
-	list         list.Model
-	width        int
-	height       int
-	focused      bool
-	filterFocused bool
-	currentType  ResourceType
-	provider     string
+	list           list.Model
+	width          int
+	height         int
+	focused        bool
+	filterFocused  bool
+	currentType    ResourceType
+	provider       string
 	providerSchema *tfjson.ProviderSchema
 }
 
@@ -139,7 +139,7 @@ func (m *EntitiesModel) SetProvider(providerName string, schema *tfjson.Provider
 func (m *EntitiesModel) SetType(resType ResourceType) {
 	m.currentType = resType
 	m.rebuildList()
-	
+
 	// Update title based on type
 	switch resType {
 	case DataSourcesType:
@@ -290,10 +290,19 @@ func (m EntitiesModel) Update(msg tea.Msg) (EntitiesModel, tea.Cmd) {
 			m.list, cmd = m.list.Update(msg)
 			return m, cmd
 		case "esc":
-			// Cancel filtering mode (reset to original list) 
+			// Cancel filtering mode (reset to original list). Also forward to list so
+			// it exits its internal filtering state immediately.
 			if m.filterFocused {
-				m.StopFiltering()
-				return m, nil
+				m.filterFocused = false
+				// Clear any typed input and also forward ESC to ensure the list exits
+				// its internal filtering state immediately.
+				m.list.ResetFilter()
+				// Best-effort: explicitly force state to none if API supports it
+				// (safe no-op if method not present at runtime)
+				// m.list.SetFilterState(list.FilterNone) -- not available in older versions.
+				var cmd tea.Cmd
+				m.list, cmd = m.list.Update(msg)
+				return m, cmd
 			} else if m.list.FilterState() == list.FilterApplied {
 				// Clear applied filter
 				m.list.ResetFilter()
@@ -313,14 +322,14 @@ func (m EntitiesModel) Update(msg tea.Msg) (EntitiesModel, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	
+
 	return m, cmd
 }
 
 // View renders the entities model
 func (m EntitiesModel) View() string {
 	view := m.list.View()
-	
+
 	// Always show instruction text to maintain consistent height
 	if m.focused && m.filterFocused {
 		hint := filterFocusedStyle.Render("(filtering - Enter=apply, Esc=cancel)")
@@ -343,6 +352,6 @@ func (m EntitiesModel) View() string {
 		}
 		view += "\n" + hint
 	}
-	
+
 	return view
 }

@@ -94,7 +94,7 @@ func TestUI_TreeViewBaseline(t *testing.T) {
 			height: 30,
 		},
 		{
-			name:   "tree_view_compact_80x24", 
+			name:   "tree_view_compact_80x24",
 			width:  80,
 			height: 24,
 		},
@@ -117,15 +117,15 @@ func TestUI_TreeViewBaseline(t *testing.T) {
 			// Navigate to tree view by simulating user interaction
 			// 1. Let initial view render
 			time.Sleep(100 * time.Millisecond)
-			
+
 			// 2. Select provider (should already be selected)
 			tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
 			time.Sleep(50 * time.Millisecond)
-			
-			// 3. Select resource type (should already be on resources)  
+
+			// 3. Select resource type (should already be on resources)
 			tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
 			time.Sleep(50 * time.Millisecond)
-			
+
 			// 4. Select entity (should already be on first resource)
 			tm.Send(tea.KeyMsg{Type: tea.KeyEnter})
 			time.Sleep(100 * time.Millisecond)
@@ -178,7 +178,7 @@ func TestUI_TreeViewWidthComparison(t *testing.T) {
 	buf1 := make([]byte, 8192)
 	n1, _ := output1.Read(buf1)
 	result1 := string(buf1[:n1])
-	
+
 	// Navigate to next entity to see width change
 	tm.Send(tea.KeyMsg{Type: tea.KeyTab}) // Tab to entities pane
 	time.Sleep(50 * time.Millisecond)
